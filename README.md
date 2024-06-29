@@ -1,16 +1,11 @@
-# weather_app
+# Weather App
 
-A new Flutter project.
+Recently I learned Flutter Basic Ui Widget. So I Have an intention making a weather app that fetching data from weather api by user geographic Location .
 
-## Getting Started
+Here I used these Package:
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- flutter sdk
+- http
+- flutter_dotenv
+- intl
+- geocode
