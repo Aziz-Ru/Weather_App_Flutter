@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:weather/weather.dart';
 import 'package:weather_app/widget/additional_info_card.dart';
 import 'package:weather_app/widget/curren_temp_widget.dart';
 import 'package:weather_app/widget/custom_text_widget.dart';
@@ -18,132 +16,162 @@ class MyWeatherApp extends StatefulWidget {
 
 class _MyWeatherAppState extends State<MyWeatherApp> {
   // late Future<Map<String, dynamic>> weatherData;
+  final WeatherFactory _wf = WeatherFactory('');
+  List<Weather>? _weather;
 
-  Future getCurrentWeather() async {
-    try {
-      final String url =
-          'https://api.openweathermap.org/data/2.5/forecast?q=Rajshahi&units=metric&APPID=${dotenv.env['OPEN_WEATHER_API_KEY']}';
-      final res = await http.get(Uri.parse(url));
-
-      final data = jsonDecode(res.body);
-
-      if (data['cod'] != '200') {
-        throw 'An Unpected Error Occured';
-      }
-      return data;
-    } catch (e) {
-      throw e.toString();
+  Future<Position> _getLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    LocationPermission permission;
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled');
     }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permission is denied');
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permission is denied forever');
+    }
+    return await Geolocator.getCurrentPosition();
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   weatherData = getCurrentWeather();
-  // }
+  @override
+  void initState() {
+    super.initState();
+    _getLocation().then((position) {
+      setState(() {
+        _wf
+            .fiveDayForecastByLocation(position.latitude, position.longitude)
+            .then((w) {
+          setState(() {
+            _weather = w;
+          });
+        });
+      });
+    });
+
+    // List<Weather> forecast = await wf.fiveDayForecastByCityName(cityName);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        actions: const [Icon(Icons.refresh)],
-        title: const CustomText(text: 'Weather App', ftSize: 24),
-        centerTitle: true,
-      ),
-      body: FutureBuilder(
-          future: getCurrentWeather(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: CustomText(
-                    text: snapshot.error.toString(),
-                    ftSize: 20,
-                    ftWeight: FontWeight.w500),
-              );
-            }
-            final weather = snapshot.data;
-            final curTemp = weather['list'][0]['main']['temp'].toString();
-            final curWeather =
-                weather['list'][0]['weather'][0]['main'].toString();
-            final curCity = weather['city']['name'].toString();
-            final curHumidity =
-                weather['list'][0]['main']['humidity'].toString();
-            final curWind = weather['list'][0]['wind']['speed'].toString();
-            final curPressure =
-                weather['list'][0]['main']['pressure'].toString();
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              child: Column(
-                children: [
-                  CurrentTemperature(
-                      temperature: curTemp,
-                      curWeather: curWeather,
-                      curCity: curCity),
-                  const SizedBox(height: 10),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: CustomText(
-                      text: 'Additional Info',
-                      ftSize: 22,
-                      ftWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        AdditionalInfoCard(
-                            icon: Icons.water_drop,
-                            title: 'Humidity',
-                            value: curHumidity),
-                        AdditionalInfoCard(
-                            icon: Icons.air, title: 'Wind', value: curWind),
-                        AdditionalInfoCard(
-                            icon: Icons.thermostat,
-                            title: 'Pressure',
-                            value: curPressure)
-                      ],
-                    ),
-                  ),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: CustomText(
-                      text: 'Hourly Forcast',
-                      ftSize: 22,
-                      ftWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    height: 150,
-                    child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: weather['list'].length,
-                        itemBuilder: (context, index) {
-                          final forcast = weather['list'][index];
-                          final weatherStatus =
-                              forcast['weather'][0]['main'].toString();
-                          final temp = forcast['main']['temp'].toString();
-                          final time = DateTime.parse(forcast['dt_txt']);
+        appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: () {
+                  _getLocation().then((position) {
+                    setState(() {
+                      _wf
+                          .fiveDayForecastByLocation(
+                              position.latitude, position.longitude)
+                          .then((w) {
+                        setState(() {
+                          _weather = w;
+                        });
+                      });
+                    });
+                  });
+                },
+                icon: Icon(Icons.refresh))
+          ],
+          title: const CustomText(text: 'Weather App', ftSize: 24),
+          centerTitle: true,
+        ),
+        body: _buildUi());
+  }
 
-                          return ForcastCard(
-                              temperature: temp,
-                              time: DateFormat.jm().format(time),
-                              curDate: DateFormat.yMMMd().format(time),
-                              weatherIcon: weatherStatus == 'Clouds' ||
-                                      weatherStatus == 'Rain'
-                                  ? Icons.cloud
-                                  : Icons.wb_sunny);
-                        }),
-                  )
-                ],
-              ),
-            );
+  Widget _buildUi() {
+    if (_weather == null) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    final curTemp = _weather![0].temperature?.celsius?.toStringAsFixed(2) ?? '';
+    final curWeather = _weather![0].weatherMain ?? '';
+    final curCity = _weather![0].areaName ?? '';
+
+    return Container(
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: Column(
+        children: [
+          CurrentTemperature(
+            temperature: curTemp,
+            curWeather: curWeather,
+            curCity: curCity,
+          ),
+          const SizedBox(height: 10),
+          _titleWidget('Additional Info'),
+          const SizedBox(height: 8),
+          _additionalinfowidgets(),
+          const SizedBox(height: 4),
+          _titleWidget('Forcast'),
+          const SizedBox(height: 6),
+          _forcastWidget()
+        ],
+      ),
+    );
+  }
+
+  Widget _additionalinfowidgets() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          AdditionalInfoCard(
+              icon: Icons.water_drop,
+              title: 'Humidity',
+              value: _weather![0].humidity.toString()),
+          AdditionalInfoCard(
+              icon: Icons.air,
+              title: 'Wind',
+              value: _weather![0].windSpeed.toString()),
+          AdditionalInfoCard(
+              icon: Icons.thermostat,
+              title: 'Pressure',
+              value: _weather![0].pressure.toString())
+        ],
+      ),
+    );
+  }
+
+  Widget _titleWidget(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: CustomText(
+        text: title,
+        ftSize: 22,
+        ftWeight: FontWeight.w500,
+      ),
+    );
+  }
+
+  Widget _forcastWidget() {
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _weather?.length,
+          itemBuilder: (context, index) {
+            final forcast = _weather![index];
+            final weather = forcast.weatherMain;
+            final temp = forcast.temperature?.celsius?.toStringAsFixed(2) ?? '';
+            final time = DateFormat('h a').format(forcast.date!);
+            final forcastDate = DateFormat('EEE, d MMM').format(forcast.date!);
+
+            return ForcastCard(
+                temperature: temp,
+                time: time,
+                curDate: forcastDate,
+                weatherIcon: weather == 'Clouds' || weather == 'Rain'
+                    ? Icons.cloud
+                    : Icons.wb_sunny);
           }),
     );
   }

@@ -13,7 +13,7 @@ class AdditionalInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 10,
+      elevation: 15,
       child: Container(
         padding: const EdgeInsets.all(10),
         width: 120,

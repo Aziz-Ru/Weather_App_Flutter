@@ -8,6 +8,6 @@ Here I used these Package:
 - http
 - flutter_dotenv
 - intl
-- geocode
+- geolocator
 
 <img  width='150' src='./Screenshot_1719684265.png'>

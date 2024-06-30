@@ -14,7 +14,7 @@ class ForcastCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 5,
+      elevation: 15,
       child: Container(
         width: 130,
         decoration: BoxDecoration(
@@ -29,7 +29,7 @@ class ForcastCard extends StatelessWidget {
               ftWeight: FontWeight.w500,
             ),
             // const SizedBox(height: 5),
-            Icon(weatherIcon, color: Colors.white, size: 30),
+            Icon(weatherIcon, size: 30),
             // const SizedBox(height: 5),
             CustomText(text: time, ftSize: 18, ftWeight: FontWeight.w400),
             const SizedBox(height: 5),

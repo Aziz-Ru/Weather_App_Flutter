@@ -16,11 +16,11 @@ class CurrentTemperature extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: Card(
-        elevation: 10,
+        elevation: 15,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        color: Colors.blueGrey[900],
+        // color: Colors.blueGrey[900],
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: BackdropFilter(
@@ -38,7 +38,7 @@ class CurrentTemperature extends StatelessWidget {
                       curWeather == 'Clouds' || curWeather == 'Rain'
                           ? Icons.cloud
                           : Icons.sunny,
-                      color: Colors.white,
+                      // color: Colors.white,
                       size: 50),
                   CustomText(
                     text: curWeather,
