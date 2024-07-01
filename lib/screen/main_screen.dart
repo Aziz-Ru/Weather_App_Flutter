@@ -15,26 +15,33 @@ class MyWeatherApp extends StatefulWidget {
 }
 
 class _MyWeatherAppState extends State<MyWeatherApp> {
-  // late Future<Map<String, dynamic>> weatherData;
   final WeatherFactory _wf = WeatherFactory('');
   List<Weather>? _weather;
 
   Future<Position> _getLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    LocationPermission permission;
+
     if (!serviceEnabled) {
       return Future.error('Location services are disabled');
     }
-    permission = await Geolocator.checkPermission();
+    // LocationPermission permission = await Geolocator.requestPermission();
+    // print(permission);
+    LocationPermission permission = await Geolocator.checkPermission();
+
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+
       if (permission == LocationPermission.denied) {
         return Future.error('Location permission is denied');
       }
     }
+
     if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permission is denied forever');
+      Geolocator.openAppSettings();
+      return Future.error(
+          'Location permissions are permanently denied, we cannot request permissions.');
     }
+
     return await Geolocator.getCurrentPosition();
   }
 
@@ -46,6 +53,14 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
         _wf
             .fiveDayForecastByLocation(position.latitude, position.longitude)
             .then((w) {
+          setState(() {
+            _weather = w;
+          });
+        });
+      });
+    }).catchError((e) {
+      setState(() {
+        _wf.fiveDayForecastByCityName('Mountain View').then((w) {
           setState(() {
             _weather = w;
           });
@@ -76,7 +91,7 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
                     });
                   });
                 },
-                icon: Icon(Icons.refresh))
+                icon: const Icon(Icons.refresh))
           ],
           title: const CustomText(text: 'Weather App', ftSize: 24),
           centerTitle: true,
