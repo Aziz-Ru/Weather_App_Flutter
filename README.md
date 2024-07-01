@@ -7,7 +7,6 @@ Here I used these Package:
 - flutter sdk
 - weather
 - flutter_dotenv
->>>>>>> main
 - intl
 - geolocator
 - flutter_launcher_icon
