@@ -15,7 +15,7 @@ class MyWeatherApp extends StatefulWidget {
 }
 
 class _MyWeatherAppState extends State<MyWeatherApp> {
-  final WeatherFactory _wf = WeatherFactory('');
+  final WeatherFactory _wf = WeatherFactory('77d63feee22bfb5e515e5c486adb1f3e');
   List<Weather>? _weather;
 
   Future<Position> _getLocation() async {
@@ -203,15 +203,35 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
             final weather = forcast.weatherMain;
             final temp = forcast.temperature?.celsius?.toStringAsFixed(2) ?? '';
             final time = DateFormat('h a').format(forcast.date!);
+            final weatherDesc = forcast.weatherDescription ?? '';
+            late IconData iconData;
             final forcastDate = DateFormat('EEE, d MMM').format(forcast.date!);
-
+            if (weatherDesc == 'overcast clouds') {
+              iconData = Icons.thunderstorm_outlined;
+            } else if (weatherDesc == 'clear sky') {
+              iconData = Icons.sunny;
+            } else if (weatherDesc == 'few clouds') {
+              iconData = Icons.cloud_outlined;
+            } else if (weatherDesc == 'scattered clouds') {
+              iconData = Icons.cloud_outlined;
+            } else if (weatherDesc == 'broken clouds') {
+              iconData = Icons.cloud_outlined;
+            } else if (weatherDesc == 'shower rain') {
+              iconData = Icons.cloud;
+            } else if (weatherDesc == 'rain') {
+              iconData = Icons.thunderstorm;
+            } else if (weatherDesc == 'thunderstorm') {
+              iconData = Icons.thunderstorm;
+            } else if (weatherDesc == 'snow') {
+              iconData = Icons.sunny_snowing;
+            } else if (weatherDesc == 'mist') {
+              iconData = Icons.sunny_snowing;
+            }
             return ForcastCard(
                 temperature: temp,
                 time: time,
                 curDate: forcastDate,
-                weatherIcon: weather == 'Clouds' || weather == 'Rain'
-                    ? Icons.cloud
-                    : Icons.wb_sunny);
+                weatherIcon: iconData);
           }),
     );
   }
