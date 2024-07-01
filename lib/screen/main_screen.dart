@@ -105,9 +105,33 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
         child: CircularProgressIndicator(),
       );
     }
+    late IconData iconData;
+
     final curTemp = _weather![0].temperature?.celsius?.toStringAsFixed(2) ?? '';
     final curWeather = _weather![0].weatherMain ?? '';
+    final weatherDesc = _weather![0].weatherDescription ?? '';
     final curCity = _weather![0].areaName ?? '';
+    if (weatherDesc == 'overcast clouds') {
+      iconData = Icons.thunderstorm_outlined;
+    } else if (weatherDesc == 'clear sky') {
+      iconData = Icons.sunny;
+    } else if (weatherDesc == 'few clouds') {
+      iconData = Icons.cloud_outlined;
+    } else if (weatherDesc == 'scattered clouds') {
+      iconData = Icons.cloud_outlined;
+    } else if (weatherDesc == 'broken clouds') {
+      iconData = Icons.cloud_outlined;
+    } else if (weatherDesc == 'shower rain') {
+      iconData = Icons.cloud;
+    } else if (weatherDesc == 'rain') {
+      iconData = Icons.thunderstorm;
+    } else if (weatherDesc == 'thunderstorm') {
+      iconData = Icons.thunderstorm;
+    } else if (weatherDesc == 'snow') {
+      iconData = Icons.sunny_snowing;
+    } else if (weatherDesc == 'mist') {
+      iconData = Icons.sunny_snowing;
+    }
 
     return Container(
       width: MediaQuery.of(context).size.width,
@@ -119,6 +143,7 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
             temperature: curTemp,
             curWeather: curWeather,
             curCity: curCity,
+            iconData: iconData,
           ),
           const SizedBox(height: 10),
           _titleWidget('Additional Info'),
@@ -178,15 +203,35 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
             final weather = forcast.weatherMain;
             final temp = forcast.temperature?.celsius?.toStringAsFixed(2) ?? '';
             final time = DateFormat('h a').format(forcast.date!);
+            final weatherDesc = forcast.weatherDescription ?? '';
+            late IconData iconData;
             final forcastDate = DateFormat('EEE, d MMM').format(forcast.date!);
-
+            if (weatherDesc == 'overcast clouds') {
+              iconData = Icons.thunderstorm_outlined;
+            } else if (weatherDesc == 'clear sky') {
+              iconData = Icons.sunny;
+            } else if (weatherDesc == 'few clouds') {
+              iconData = Icons.cloud_outlined;
+            } else if (weatherDesc == 'scattered clouds') {
+              iconData = Icons.cloud_outlined;
+            } else if (weatherDesc == 'broken clouds') {
+              iconData = Icons.cloud_outlined;
+            } else if (weatherDesc == 'shower rain') {
+              iconData = Icons.cloud;
+            } else if (weatherDesc == 'rain') {
+              iconData = Icons.thunderstorm;
+            } else if (weatherDesc == 'thunderstorm') {
+              iconData = Icons.thunderstorm;
+            } else if (weatherDesc == 'snow') {
+              iconData = Icons.sunny_snowing;
+            } else if (weatherDesc == 'mist') {
+              iconData = Icons.sunny_snowing;
+            }
             return ForcastCard(
                 temperature: temp,
                 time: time,
                 curDate: forcastDate,
-                weatherIcon: weather == 'Clouds' || weather == 'Rain'
-                    ? Icons.cloud
-                    : Icons.wb_sunny);
+                weatherIcon: iconData);
           }),
     );
   }

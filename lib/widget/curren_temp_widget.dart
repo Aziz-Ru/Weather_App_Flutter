@@ -5,11 +5,13 @@ import 'package:weather_app/widget/custom_text_widget.dart';
 
 class CurrentTemperature extends StatelessWidget {
   final String temperature, curWeather, curCity;
+  final IconData iconData;
   const CurrentTemperature(
       {super.key,
       required this.temperature,
       required this.curWeather,
-      required this.curCity});
+      required this.curCity,
+      required this.iconData});
 
   @override
   Widget build(BuildContext context) {
@@ -34,10 +36,7 @@ class CurrentTemperature extends StatelessWidget {
                     ftSize: 32,
                     ftWeight: FontWeight.bold,
                   ),
-                  Icon(
-                      curWeather == 'Clouds' || curWeather == 'Rain'
-                          ? Icons.cloud
-                          : Icons.sunny,
+                  Icon(iconData,
                       // color: Colors.white,
                       size: 50),
                   CustomText(
