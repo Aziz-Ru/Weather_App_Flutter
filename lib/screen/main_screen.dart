@@ -15,7 +15,7 @@ class MyWeatherApp extends StatefulWidget {
 }
 
 class _MyWeatherAppState extends State<MyWeatherApp> {
-  final WeatherFactory _wf = WeatherFactory('77d63feee22bfb5e515e5c486adb1f3e');
+  final WeatherFactory _wf = WeatherFactory('');
   List<Weather>? _weather;
 
   Future<Position> _getLocation() async {
@@ -189,11 +189,5 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
                     : Icons.wb_sunny);
           }),
     );
-  }
-
-  Future<Position> _handlePermissionDenied() async {
-    Position? position = await Geolocator.getLastKnownPosition();
-    print('Last Konown position: $position');
-    return position!;
   }
 }
