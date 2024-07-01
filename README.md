@@ -7,7 +7,13 @@ Here I used these Package:
 - flutter sdk
 - weather
 - flutter_dotenv
+>>>>>>> main
 - intl
 - geolocator
+- flutter_launcher_icon
 
+
+<div>
 <img  width='150' src='./Screenshot_1719684265.png'>
+<img  width='150' src='./Screenshot_1719763733.png'>
+</div>
