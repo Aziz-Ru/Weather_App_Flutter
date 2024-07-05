@@ -32,7 +32,7 @@ class CurrentTemperature extends StatelessWidget {
               child: Column(
                 children: [
                   CustomText(
-                    text: temperature,
+                    text: '$temperature °C',
                     ftSize: 32,
                     ftWeight: FontWeight.bold,
                   ),

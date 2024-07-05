@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 import 'package:weather/weather.dart';
 import 'package:weather_app/widget/additional_info_card.dart';
 import 'package:weather_app/widget/curren_temp_widget.dart';
@@ -15,61 +15,7 @@ class MyWeatherApp extends StatefulWidget {
 }
 
 class _MyWeatherAppState extends State<MyWeatherApp> {
-  final WeatherFactory _wf = WeatherFactory('');
-  List<Weather>? _weather;
-
-  Future<Position> _getLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled');
-    }
-    // LocationPermission permission = await Geolocator.requestPermission();
-    // print(permission);
-    LocationPermission permission = await Geolocator.checkPermission();
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permission is denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      Geolocator.openAppSettings();
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _getLocation().then((position) {
-      setState(() {
-        _wf
-            .fiveDayForecastByLocation(position.latitude, position.longitude)
-            .then((w) {
-          setState(() {
-            _weather = w;
-          });
-        });
-      });
-    }).catchError((e) {
-      setState(() {
-        _wf.fiveDayForecastByCityName('Mountain View').then((w) {
-          setState(() {
-            _weather = w;
-          });
-        });
-      });
-    });
-
-    // List<Weather> forecast = await wf.fiveDayForecastByCityName(cityName);
-  }
+  final WeatherFactory _wf = WeatherFactory('77d63feee22bfb5e515e5c486adb1f3e');
 
   @override
   Widget build(BuildContext context) {
@@ -78,60 +24,34 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
           actions: [
             IconButton(
                 onPressed: () {
-                  _getLocation().then((position) {
-                    setState(() {
-                      _wf
-                          .fiveDayForecastByLocation(
-                              position.latitude, position.longitude)
-                          .then((w) {
-                        setState(() {
-                          _weather = w;
-                        });
-                      });
-                    });
-                  });
+                  setState(() {});
                 },
                 icon: const Icon(Icons.refresh))
           ],
           title: const CustomText(text: 'Weather App', ftSize: 24),
           centerTitle: true,
         ),
-        body: _buildUi());
+        body: FutureBuilder(
+            future: _getWeather(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError) {
+                return Center(child: Text(snapshot.error.toString()));
+              } else if (snapshot.connectionState == ConnectionState.done) {
+                List<Weather>? w = snapshot.data;
+                return _buildUi(w!);
+              } else {
+                return const Center(child: Text('Error'));
+              }
+            }));
   }
 
-  Widget _buildUi() {
-    if (_weather == null) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-    late IconData iconData;
-
-    final curTemp = _weather![0].temperature?.celsius?.toStringAsFixed(2) ?? '';
-    final curWeather = _weather![0].weatherMain ?? '';
-    final weatherDesc = _weather![0].weatherDescription ?? '';
-    final curCity = _weather![0].areaName ?? '';
-    if (weatherDesc == 'overcast clouds') {
-      iconData = Icons.thunderstorm_outlined;
-    } else if (weatherDesc == 'clear sky') {
-      iconData = Icons.sunny;
-    } else if (weatherDesc == 'few clouds') {
-      iconData = Icons.cloud_outlined;
-    } else if (weatherDesc == 'scattered clouds') {
-      iconData = Icons.cloud_outlined;
-    } else if (weatherDesc == 'broken clouds') {
-      iconData = Icons.cloud_outlined;
-    } else if (weatherDesc == 'shower rain') {
-      iconData = Icons.cloud;
-    } else if (weatherDesc == 'rain') {
-      iconData = Icons.thunderstorm;
-    } else if (weatherDesc == 'thunderstorm') {
-      iconData = Icons.thunderstorm;
-    } else if (weatherDesc == 'snow') {
-      iconData = Icons.sunny_snowing;
-    } else if (weatherDesc == 'mist') {
-      iconData = Icons.sunny_snowing;
-    }
+  Widget _buildUi(List<Weather> weather) {
+    final curTemp = weather[0].temperature?.celsius?.toStringAsFixed(2) ?? '';
+    final curWeather = weather[0].weatherMain ?? '';
+    final curCity = weather[0].areaName ?? '';
+    IconData iconData = _getIcon(curWeather);
 
     return Container(
       width: MediaQuery.of(context).size.width,
@@ -148,17 +68,17 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
           const SizedBox(height: 10),
           _titleWidget('Additional Info'),
           const SizedBox(height: 8),
-          _additionalinfowidgets(),
+          _additionalinfowidgets(weather),
           const SizedBox(height: 4),
           _titleWidget('Forcast'),
           const SizedBox(height: 6),
-          _forcastWidget()
+          _forcastWidget(weather)
         ],
       ),
     );
   }
 
-  Widget _additionalinfowidgets() {
+  Widget _additionalinfowidgets(List<Weather> weather) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -167,15 +87,15 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
           AdditionalInfoCard(
               icon: Icons.water_drop,
               title: 'Humidity',
-              value: _weather![0].humidity.toString()),
+              value: weather[0].humidity.toString()),
           AdditionalInfoCard(
               icon: Icons.air,
               title: 'Wind',
-              value: _weather![0].windSpeed.toString()),
+              value: weather[0].windSpeed.toString()),
           AdditionalInfoCard(
               icon: Icons.thermostat,
               title: 'Pressure',
-              value: _weather![0].pressure.toString())
+              value: weather[0].pressure.toString())
         ],
       ),
     );
@@ -192,41 +112,20 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
     );
   }
 
-  Widget _forcastWidget() {
-    return SizedBox(
-      height: 150,
+  Widget _forcastWidget(List<Weather> weather) {
+    return Container(
+      height: 160,
+      margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: _weather?.length,
+          itemCount: weather.length,
           itemBuilder: (context, index) {
-            final forcast = _weather![index];
-            final weather = forcast.weatherMain;
+            final forcast = weather[index];
             final temp = forcast.temperature?.celsius?.toStringAsFixed(2) ?? '';
             final time = DateFormat('h a').format(forcast.date!);
-            final weatherDesc = forcast.weatherDescription ?? '';
-            late IconData iconData;
+            final weatherMain = forcast.weatherMain ?? '';
             final forcastDate = DateFormat('EEE, d MMM').format(forcast.date!);
-            if (weatherDesc == 'overcast clouds') {
-              iconData = Icons.thunderstorm_outlined;
-            } else if (weatherDesc == 'clear sky') {
-              iconData = Icons.sunny;
-            } else if (weatherDesc == 'few clouds') {
-              iconData = Icons.cloud_outlined;
-            } else if (weatherDesc == 'scattered clouds') {
-              iconData = Icons.cloud_outlined;
-            } else if (weatherDesc == 'broken clouds') {
-              iconData = Icons.cloud_outlined;
-            } else if (weatherDesc == 'shower rain') {
-              iconData = Icons.cloud;
-            } else if (weatherDesc == 'rain') {
-              iconData = Icons.thunderstorm;
-            } else if (weatherDesc == 'thunderstorm') {
-              iconData = Icons.thunderstorm;
-            } else if (weatherDesc == 'snow') {
-              iconData = Icons.sunny_snowing;
-            } else if (weatherDesc == 'mist') {
-              iconData = Icons.sunny_snowing;
-            }
+            IconData iconData = _getIcon(weatherMain);
             return ForcastCard(
                 temperature: temp,
                 time: time,
@@ -234,5 +133,47 @@ class _MyWeatherAppState extends State<MyWeatherApp> {
                 weatherIcon: iconData);
           }),
     );
+  }
+
+  Future<LocationData> _getLocation() async {
+    Location location = Location();
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        return Future.error('Location service is disabled');
+      }
+    }
+    PermissionStatus permissionStatus = await location.hasPermission();
+    if (permissionStatus == PermissionStatus.denied) {
+      permissionStatus = await location.requestPermission();
+      if (permissionStatus != PermissionStatus.granted) {
+        return Future.error('Location permission is denied');
+      }
+    }
+    // print(permissionStatus);
+    return await location.getLocation();
+  }
+
+  Future<List<Weather>> _getWeather() async {
+    try {
+      LocationData locationData = await _getLocation();
+      // print(locationData);
+      List<Weather> current = await _wf.fiveDayForecastByLocation(
+          locationData.latitude as double, locationData.longitude as double);
+      // print(current);
+      return current;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  IconData _getIcon(String weather) {
+    if (weather.toLowerCase().contains('rain')) {
+      return Icons.cloud;
+    } else if (weather.toLowerCase().contains('cloud')) {
+      return Icons.cloud_outlined;
+    }
+    return Icons.sunny;
   }
 }

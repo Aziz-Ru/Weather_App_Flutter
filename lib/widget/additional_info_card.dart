@@ -25,6 +25,7 @@ class AdditionalInfoCard extends StatelessWidget {
             Icon(
               icon,
               size: 32,
+              color: title == 'Pressure' ? Colors.red : Colors.blue,
             ),
             const SizedBox(
               height: 5,
