@@ -4,9 +4,8 @@ Recently I learned Flutter Basic Ui Widget. So I Have an intention making a weat
 
 Here I used these Package:
 
-- flutter sdk
-- weather
-- flutter_dotenv
+- http
+- open weather api
 - intl
 - geolocator
 - flutter_launcher_icon
